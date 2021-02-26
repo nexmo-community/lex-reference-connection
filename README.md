@@ -8,7 +8,7 @@ You can use the Lex reference connection code to connect a Vonage Voice API call
 
 Lex reference connection makes use of the [websockets feature](https://docs.nexmo.com/voice/voice-api/websockets) of Vonage Voice API. When a voice call is established, a Voice API application triggers a websocket connection to this Lex reference connection and streams the audio to and from the voice call in real time.
 
-Lex reference connection then takes care of capturing chunks of speech using Voice Activity Detection then post them the Amazon Lex Endpoint. When Lex returns audio, Lex reference connection code streams that back over the websocket to the voice call.
+Lex reference connection then takes care of capturing chunks of speech using Voice Activity Detection then post them to the Amazon Lex Endpoint. When Lex returns audio, Lex reference connection code streams that back over the websocket to the voice call.
 
 Lex reference connection does not store any Lex specific configuration or credentials: these are supplied in the [NCCO (Nexmo Call Control Oject)](https://developer.nexmo.com/voice/voice-api/ncco-reference#websocket-endpoint) from the Voice API application, telling the Voice API to connect the call to this Lex reference connection. This is a standard `connect` function used to connect calls to websockets, with a few specific parameters to connect to Lex.
 
