@@ -45,6 +45,8 @@ conns = {}
 # Environment variables, these are set in .env locally
 PORT = os.getenv("PORT")
 
+#---------------------
+
 class BufferedPipe(object):
     def __init__(self, max_frames, sink):
         """
@@ -121,38 +123,40 @@ class LexProcessor(object):
             req = requests.Request(
                 'POST', endpoint, auth=auth, headers=headers)
             prepped = req.prepare()
-            info('Here 01')
             info(prepped.headers)
             r = requests.post(endpoint, data=payload, headers=prepped.headers)
-            info('Here 02')
             info(r.headers)
-            
-            if (r.headers.get('x-amz-lex-sentiment')):
-                self.customer_sentiment = b64decode(r.headers['x-amz-lex-sentiment']).decode('ascii')
-            else:    
-                self.customer_sentiment = "Sentiment analysis is not enabled on this Lex bot or customer_transcript is empty"
 
             self.customer_transcript = r.headers.get('x-amz-lex-input-transcript')
             self.bot_transcript = r.headers.get('x-amz-lex-message')
             self.session_id = r.headers.get('x-amz-lex-session-id')
-            # info ("customer_sentiment")
-            # info (self.customer_sentiment)
-            # info ("customer_transcript")
-            # info (self.customer_transcript)
-            # info ("bot_transcript")
-            # info (self.bot_transcript)
-            # info ("session_id")
-            # info (self.session_id)
-            self.analytics_raw = {
-                "customer_transcript": str(self.customer_transcript),
-                "bot_transcript": str(self.bot_transcript),
-                "customer_sentiment": str(self.customer_sentiment),
-                "session_id": str(self.session_id),
-                "client_id": self.client_id,
-                "service": "Amazon Lex"
-            }
+            
+            if (r.headers.get('x-amz-lex-sentiment')):
+                self.customer_sentiment = b64decode(r.headers['x-amz-lex-sentiment']).decode('ascii')
+
+                self.analytics_raw = {
+                    "customer_transcript": str(self.customer_transcript),
+                    "bot_transcript": str(self.bot_transcript),
+                    "customer_sentiment": json.loads(self.customer_sentiment),
+                    "session_id": self.session_id,
+                    "client_id": self.client_id,
+                    "service": "Amazon Lex"
+                }
+
+            else:    
+                self.customer_sentiment = "Sentiment analysis is not enabled on this Lex bot or customer_transcript is empty"
+
+                self.analytics_raw = {
+                    "customer_transcript": str(self.customer_transcript),
+                    "bot_transcript": str(self.bot_transcript),
+                    "customer_sentiment": self.customer_sentiment,
+                    "session_id": self.session_id,
+                    "client_id": self.client_id,
+                    "service": "Amazon Lex"
+                }
+            
             self.analytics = json.dumps(self.analytics_raw)
-            info('analytics')
+            
             info(self.analytics)
 
             # Posting to analytics server
