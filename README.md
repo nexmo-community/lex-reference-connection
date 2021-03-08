@@ -1,6 +1,6 @@
 # Lex reference connection code
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/nexmo-se/lex-reference-connection)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/nexmo-community/lex-reference-connection)
 
 You can use the Lex reference connection code to connect a Vonage Voice API call to an Amazon Lex bot and then have an audio conversation with the bot. Voice transcripts and sentiment analysis are posted back to the Vonage Voice API application.
 
@@ -12,7 +12,7 @@ Lex reference connection then takes care of capturing chunks of speech using Voi
 
 Lex reference connection does not store any Lex specific configuration or credentials: these are supplied in the [NCCO (Nexmo Call Control Oject)](https://developer.nexmo.com/voice/voice-api/ncco-reference#websocket-endpoint) from the Voice API application, telling the Voice API to connect the call to this Lex reference connection. This is a standard `connect` function used to connect calls to websockets, with a few specific parameters to connect to Lex.
 
-See https://github.com/nexmo-se/lex-sample-voice-application for a **sample Voice API application** using this Lex reference connection code to connect voice calls to an Amazon Lex bot.
+See https://github.com/nexmo-community/lex-sample-voice-application for a **sample Voice API application** using this Lex reference connection code to connect voice calls to an Amazon Lex bot.
 
 ## Transcripts
 
