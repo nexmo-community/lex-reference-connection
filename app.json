@@ -2,7 +2,7 @@
   "name": "Lex Connector - Connect Vonage Voice API calls to AWS Lex bots",
   "description": "The Lex Connector allows a Vonage Voice API call to be connected to an AWS Lex bot. This is the bridge between voice and the bot functionality that allows users to 'talk' directly with a bot.",
   "keywords": ["lex", "bot", "python", "amazon web services", "vonage"],
-  "repository": "https://github.com/nexmo-se/lex-reference-connection",
+  "repository": "https://github.com/nexmo-community/lex-reference-connection",
   "buildpacks": [
     {
        "url": "heroku/python"
