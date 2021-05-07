@@ -106,12 +106,16 @@ class LexProcessor(object):
 
             info(">>> auth:")
             info(auth)
-
+            info("")
 
             info('Processing {} frames for {}'.format(str(count), id))
             endpoint = 'https://runtime.lex.{}.amazonaws.com{}'.format(
                 self._aws_region, self._path)
+            
+            info(">>> endpoint:")
             info(endpoint)
+            info("")
+            
             if self.rate == 16000:
                 headers = {
                     'Content-Type': 'audio/l16; channels=1; rate=16000', 'Accept': 'audio/pcm'}
@@ -122,51 +126,80 @@ class LexProcessor(object):
                 info("Unsupported Sample Rate: % ".format(self.rate))
             req = requests.Request(
                 'POST', endpoint, auth=auth, headers=headers)
+            
             prepped = req.prepare()
+            info(">>> prepped headers:")
             info(prepped.headers)
+            info("")
+
             r = requests.post(endpoint, data=payload, headers=prepped.headers)
+            info(">>> request response headers:")
             info(r.headers)
+            info("")
 
             self.customer_transcript = r.headers.get('x-amz-lex-input-transcript')
             self.bot_transcript = r.headers.get('x-amz-lex-message')
             self.session_id = r.headers.get('x-amz-lex-session-id')
+            self.aws_error = r.headers.get('x-amzn-ErrorType')
+
             
-            if (r.headers.get('x-amz-lex-sentiment')):
-                self.customer_sentiment = b64decode(r.headers['x-amz-lex-sentiment']).decode('ascii')
+            if (self.aws_error):
+                info(">>> aws error:")
+                info(self.aws_error)
+                info("")
 
                 self.analytics_raw = {
-                    "customer_transcript": str(self.customer_transcript),
-                    "bot_transcript": str(self.bot_transcript),
-                    "customer_sentiment": json.loads(self.customer_sentiment),
+                    "customer_transcript": "Error: Double check your Lex bot name, alias, and region environment variables",
+                    "bot_transcript": "Error: Double check your Lex bot name, alias, and region environment variables",
+                    "customer_sentiment": "",
                     "session_id": self.session_id,
                     "client_id": self.client_id,
                     "service": "Amazon Lex"
                 }
 
-            else:    
-                self.customer_sentiment = "Sentiment analysis is not enabled on this Lex bot or customer_transcript is empty"
+            else:
+                info(">>> no error")
 
-                self.analytics_raw = {
-                    "customer_transcript": str(self.customer_transcript),
-                    "bot_transcript": str(self.bot_transcript),
-                    "customer_sentiment": self.customer_sentiment,
-                    "session_id": self.session_id,
-                    "client_id": self.client_id,
-                    "service": "Amazon Lex"
-                }
+                if (r.headers.get('x-amz-lex-sentiment')):
+                    self.customer_sentiment = b64decode(r.headers['x-amz-lex-sentiment']).decode('ascii')
+
+                    self.analytics_raw = {
+                        "customer_transcript": str(self.customer_transcript),
+                        "bot_transcript": str(self.bot_transcript),
+                        "customer_sentiment": json.loads(self.customer_sentiment),
+                        "session_id": self.session_id,
+                        "client_id": self.client_id,
+                        "service": "Amazon Lex"
+                    }
+
+                else:    
+                    self.customer_sentiment = "Sentiment analysis is not enabled on this Lex bot or customer_transcript is empty"
+
+                    self.analytics_raw = {
+                        "customer_transcript": str(self.customer_transcript),
+                        "bot_transcript": str(self.bot_transcript),
+                        "customer_sentiment": self.customer_sentiment,
+                        "session_id": self.session_id,
+                        "client_id": self.client_id,
+                        "service": "Amazon Lex"
+                    }
             
+
             self.analytics = json.dumps(self.analytics_raw)
             
+            info(">>> analytics:")
             info(self.analytics)
+            info("")
 
             # Posting to analytics server
             if (self.webhook_url):
             	a = requests.post(self.webhook_url, data=self.analytics, headers={'Content-Type': 'application/json'})
 
-            self.playback(r.content, id)
-            if r.headers.get('x-amz-lex-session-attributes'):
-                if json.loads(b64decode(r.headers['x-amz-lex-session-attributes'])).get('nexmo-close'):
-                    conns[id].close()
+            if (not self.aws_error):                
+                self.playback(r.content, id)
+                if r.headers.get('x-amz-lex-session-attributes'):
+                    if json.loads(b64decode(r.headers['x-amz-lex-session-attributes'])).get('nexmo-close'):
+                        conns[id].close()
         else:
             info('Discarding {} frames'.format(str(count)))
 
@@ -225,6 +258,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                     # Force processing and clearing of the buffer
                     self.frame_buffer.process(self.id)
         else:
+            info("---message---")
             info(message)
             # Here we should be extracting the meta data that was sent and attaching it to the connection object
             data = json.loads(message)
@@ -232,7 +266,13 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             
             self.rate = int(m_options['rate'])
             # info(">>> rate")
-            # info(self.rate)            
+            # info(self.rate) 
+
+            # e_type, e_options = cgi.parse_header(data['x-amzn-RequestId'])
+
+            # self.aws_error = str(e_options['x-amzn-ErrorType'])
+            # info("aws_error")
+            # info(self.aws_error)
 
             region = data.get('aws_region', 'us-east-1')
             clip_min = int(data.get('clip_min', 200))
